@@ -24,9 +24,10 @@ local ITEM_CLASS = "annotation"
 local ITEM_KEYS = {
   x = true, y = true, tx = true, ty = true, w = true, h = true,
   anchor = true, slack = true, tw = true, color = true,
+  ["fragment-style"] = true,
 }
 -- Attributes the container can set as defaults for all its annotations.
-local DEFAULT_KEYS = { "w", "h", "anchor", "slack", "tw", "color" }
+local DEFAULT_KEYS = { "w", "h", "anchor", "slack", "tw", "color", "fragment-style" }
 
 local DEFAULTS = { w = "0.1", h = "0.1", anchor = "auto", slack = "0.5" }
 
@@ -125,7 +126,7 @@ local function geometry(p)
   }
 end
 
-local function build_item(div, defaults)
+local function build_item(div, defaults, incremental)
   local a = div.attributes
   local function get(key)
     local v = a[key]
@@ -182,7 +183,19 @@ local function build_item(div, defaults)
   -- attributes (e.g. fragment-index) so that the whole callout behaves as one.
   local classes = pandoc.List({ "ic-item" })
   for _, c in ipairs(div.classes) do
-    if c ~= ITEM_CLASS then classes:insert(c) end
+    if c ~= ITEM_CLASS and c ~= "nonincremental" then classes:insert(c) end
+  end
+  -- incremental container (or an explicit fragment-style): one fragment per
+  -- callout, in document order unless fragment-index is given. An annotation
+  -- that already is a .fragment keeps its own effect; .nonincremental opts out.
+  local fragment_style = get("fragment-style")
+  if (incremental or (a["fragment-style"] or "") ~= "")
+      and not div.classes:includes("nonincremental")
+      and not classes:includes("fragment") then
+    classes:insert("fragment")
+    for effect in (fragment_style or ""):gmatch("[^%s,]+") do
+      if effect ~= "fade-in" then classes:insert(effect) end
+    end
   end
   local attrs = {}
   for k, v in pairs(a) do
@@ -274,8 +287,17 @@ local function process(el, top_level)
   -- reveal's .r-stretch at runtime.
   local classes = pandoc.List()
   local stretch = false
+  -- .incremental is consumed here: left on the container, Pandoc would also
+  -- make any list inside the callout texts incremental
+  local incremental = (el.attributes["fragment-style"] or "") ~= ""
   for _, c in ipairs(el.classes) do
-    if c == "r-stretch" or c == "stretch" then stretch = true else classes:insert(c) end
+    if c == "r-stretch" or c == "stretch" then
+      stretch = true
+    elseif c == "incremental" then
+      incremental = true
+    else
+      classes:insert(c)
+    end
   end
   if not stretch and top_level and auto_stretch and not sized
       and not classes:includes("nostretch") then
@@ -304,7 +326,7 @@ local function process(el, top_level)
 
   local stage_content = pandoc.List({ pandoc.Plain({ img }) })
   for _, item in ipairs(items) do
-    stage_content:insert(build_item(item, defaults))
+    stage_content:insert(build_item(item, defaults, incremental))
   end
 
   local stage_attrs = {}

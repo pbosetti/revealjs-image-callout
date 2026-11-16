@@ -62,16 +62,60 @@ On each `.annotation`:
 | `slack`   | 0.5     | How loose the S is: `0` is a straight line, `1` is a pronounced S. |
 | `tw`      | –       | Fixed text box width (by default the box fits the text, up to `--ic-text-max-width`). |
 | `color`   | –       | Accent colour for this callout (ellipse, leader, box edge). |
+| `fragment-style` | – | Reveal fragment effect; see [Fragments](#fragments). |
 
 Coordinates and sizes are fractions of the image width (`x`, `w`, `tx`, `tw`)
 or height (`y`, `h`, `ty`). You can also write them as percentages: `x=50%`.
 
-`w`, `h`, `anchor`, `slack`, `tw` and `color` can also be set on the
+`w`, `h`, `anchor`, `slack`, `tw`, `color` and `fragment-style` can also be set on the
 `.image-callout` container. They then act as defaults for all its annotations.
 
 Any other class or attribute on an annotation stays on the callout's wrapper.
 For example, `{.annotation .fragment fragment-index=2 ...}` makes the ellipse,
 leader and text appear together as one fragment.
+
+## Fragments
+
+Make every callout of an image a fragment by adding `.incremental` to the
+container:
+
+```markdown
+:::: {.image-callout .incremental}
+![](figure.png)
+
+::: {.annotation x=0.2 y=0.1 tx=0.4 ty=0.2}
+Appears on the first click
+:::
+
+::: {.annotation x=0.8 y=0.4 tx=0.6 ty=0.7}
+Appears on the second click; the first stays visible
+:::
+::::
+```
+
+To show **one callout at a time**, pick a reveal fragment effect with
+`fragment-style`. Setting it already makes the container incremental:
+
+```markdown
+:::: {.image-callout fragment-style=fade-in-then-out}
+```
+
+| `fragment-style`        | Effect |
+|-------------------------|--------|
+| `fade-in` (default)     | callouts accumulate |
+| `fade-in-then-out`      | one at a time: each callout disappears when the next one appears |
+| `fade-in-then-semi-out` | the current callout is shown at full strength, earlier ones are dimmed |
+| `fade-up`, `grow`, …    | any other [reveal fragment effect](https://revealjs.com/fragments/) |
+
+* Callouts appear in document order. Use `fragment-index=n` on an annotation
+  to change the order, or to show several callouts together.
+* `.nonincremental` on an annotation keeps it always visible, for example a
+  reference mark that stays while the others cycle.
+* An annotation that already has `.fragment` keeps its own effect.
+* `fragment-style` also works on a single annotation.
+* Lists inside callout text are not made incremental.
+* With `fade-in-then-out`, the last callout stays visible until you move to
+  the next slide. This is how reveal's effect works.
 
 ### Geometry
 
