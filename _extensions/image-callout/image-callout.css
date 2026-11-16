@@ -1,0 +1,162 @@
+/*
+ * image-callout -- default styles.
+ *
+ * Customise through the custom properties below, either globally
+ *   .image-callout { --ic-accent: #c00; }
+ * or on a single annotation with the `color` attribute or a class:
+ *   .ic-item.danger { --ic-accent: #c00; }
+ *
+ * Only --ic-accent is meant to be overridden per annotation; the other
+ * properties are read at the leaves too, so they also work per annotation.
+ */
+.image-callout {
+  --ic-accent: #0758e5;          /* quarto callout-note blue */
+  /* --ic-stroke:        line/ellipse colour (defaults to --ic-accent)   */
+  /* --ic-stroke-width:  3px                                              */
+  /* --ic-halo:          drop-shadow behind ellipse and leader            */
+  /* --ic-bg:            text box background                              */
+  /* --ic-color:         text colour                                      */
+  /* --ic-border:        thin text box border                             */
+  /* --ic-font-size:     text size, relative to the slide text            */
+  /* --ic-text-max-width: max width of the text box, % of image width     */
+  /* --ic-max-height:    max height of the image (e.g. 500px)             */
+  margin: 0.5em 0;
+}
+
+.image-callout .ic-stage {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  line-height: 0;          /* no gap under the inline image */
+}
+
+.image-callout .ic-stage img.ic-image,
+.reveal .image-callout .ic-stage img.ic-image {
+  display: block;
+  margin: 0;
+  max-width: 100%;
+  max-height: var(--ic-max-height, none);
+  height: auto;
+}
+
+.image-callout .ic-stage.ic-sized img.ic-image {
+  width: 100%;
+  max-height: none;
+}
+
+/* one annotation: covers the whole image, so % coordinates are image-relative */
+.image-callout .ic-item {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  line-height: normal;
+}
+
+.image-callout .ic-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: var(--ic-halo, drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.9)));
+}
+
+.image-callout .ic-ellipse,
+.image-callout .ic-leader {
+  fill: none;
+  stroke: var(--ic-stroke, var(--ic-accent));
+  stroke-width: var(--ic-stroke-width, 3px);
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* text box: looks like a Quarto callout, with a translucent grey body */
+.image-callout .ic-text {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: var(--ic-text-max-width, 40%);
+  padding: 0.35em 0.7em;
+  font-size: var(--ic-font-size, 0.55em);
+  line-height: 1.3;
+  text-align: left;
+  color: var(--ic-color, #1a1a1a);
+  background: var(--ic-bg, rgba(200, 200, 200, 0.75));
+  border: 1px solid var(--ic-border, rgba(0, 0, 0, 0.12));
+  border-left: 5px solid var(--ic-accent);
+  border-radius: 0.25rem;
+}
+
+.image-callout .ic-text > :first-child { margin-top: 0; }
+.image-callout .ic-text > :last-child { margin-bottom: 0; }
+.image-callout .ic-text p { margin: 0 0 0.4em 0; }
+.image-callout .ic-text p:last-child { margin-bottom: 0; }
+
+/* (tx, ty) is the point where the leader meets the box */
+.image-callout .ic-anchor-left   { transform: translate(0, -50%); }
+.image-callout .ic-anchor-right  { transform: translate(-100%, -50%); }
+.image-callout .ic-anchor-top    { transform: translate(-50%, 0); }
+.image-callout .ic-anchor-bottom { transform: translate(-50%, -100%); }
+.image-callout .ic-anchor-center { transform: translate(-50%, -50%); }
+
+.image-callout .ic-caption {
+  margin-top: 0.4em;
+  font-size: 0.6em;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.image-callout .ic-text code {
+  color: inherit;
+  background: transparent;
+}
+
+/*
+ * Stretch mode (.ic-stretch, applied automatically to a top-level image-callout
+ * whose image has no explicit size): reveal sets the container height to the
+ * free slide height (via .r-stretch, added at runtime by image-callout.js);
+ * the frame is a size container and the stage is fitted in it, keeping the
+ * image aspect ratio.
+ */
+.reveal .image-callout.ic-stretch {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0;
+  max-width: none;
+}
+
+.image-callout.ic-stretch > .ic-frame {
+  flex: 1 1 0;
+  min-height: 0;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-callout.ic-stretch .ic-stage {
+  margin: 0;
+}
+
+/* aspect ratio known (read by the filter): scale up or down to fit */
+.image-callout.ic-stretch .ic-stage.ic-ratio {
+  width: min(100cqw, calc(100cqh * var(--ic-ratio)));
+  max-width: none;
+  aspect-ratio: var(--ic-ratio);
+}
+
+.image-callout.ic-stretch .ic-stage.ic-ratio img.ic-image {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+}
+
+/* aspect ratio unknown (e.g. remote image): only scale down */
+.image-callout.ic-stretch .ic-stage:not(.ic-ratio) img.ic-image {
+  max-width: 100cqw;
+  max-height: 100cqh;
+}
