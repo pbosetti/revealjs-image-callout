@@ -31,8 +31,9 @@
   line-height: 0;          /* no gap under the inline image */
 }
 
-.image-callout .ic-stage img.ic-image,
-.reveal .image-callout .ic-stage img.ic-image {
+/* not in cover mode: there the theme sizes the image */
+.image-callout:not(.ic-cover) .ic-stage img.ic-image,
+.reveal .image-callout:not(.ic-cover) .ic-stage img.ic-image {
   display: block;
   margin: 0;
   max-width: 100%;
@@ -159,4 +160,44 @@
 .image-callout.ic-stretch .ic-stage:not(.ic-ratio) img.ic-image {
   max-width: 100cqw;
   max-height: 100cqh;
+}
+
+/*
+ * Cover mode (.ic-cover, set by image-callout.js when a theme positions the
+ * image absolutely, e.g. a full-bleed photo slide): the image keeps the theme
+ * layout; the annotations live in .ic-box, placed over the image box, and
+ * .ic-fit matches the image's object-fit (centred, as object-position: 50% 50%).
+ */
+.image-callout.ic-cover,
+.image-callout.ic-cover .ic-stage {
+  position: static;
+  margin: 0;
+}
+
+.image-callout .ic-box {
+  position: absolute;
+  container-type: size;
+  pointer-events: none;
+}
+
+.image-callout .ic-fit {
+  position: absolute;
+  inset: 0;
+}
+
+.image-callout .ic-box.ic-fit-cover .ic-fit,
+.image-callout .ic-box.ic-fit-contain .ic-fit {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  aspect-ratio: var(--ic-ratio);
+}
+
+.image-callout .ic-box.ic-fit-cover .ic-fit {
+  width: max(100cqw, calc(100cqh * (var(--ic-ratio))));
+}
+
+.image-callout .ic-box.ic-fit-contain .ic-fit {
+  width: min(100cqw, calc(100cqh * (var(--ic-ratio))));
 }
